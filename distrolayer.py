@@ -58,7 +58,6 @@ class DistroAbstractionLayer:
                 'interface': {
                     "install": "pacman -Sy $INSTALL$ --noconfirm",
                     "update": "pacman -Syy",
-                    "upgrade": None,
                 }
             },
             {
