@@ -1,6 +1,6 @@
 # Distribution Abstraction Layer
 
-A python based abstraction layer that allows you to interact with your server without having to worry about what package manager is installed
+A python based abstraction layer that allows you to interact with your system without having to worry about what distribution the system is
 
 -----
 
