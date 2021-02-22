@@ -68,7 +68,7 @@ You can hide this by adding the `hide` parameter to the `install` command
 You will notice that there is now no output, use the `hide` param if you are looking to install packages/programs behind the scenes without clogging up stdout
 
 ### Upgrading Your System
-Some package managers (apt for example) have the ability to run full system updates/upgrades. If those features are supported by the systems package manager, you can use the Distro Layer to run them
+Some package managers (apt for example) have the ability to run full system updates/upgrades. If those features are supported by the system's package manager, you can use the Distro Layer to run them
 
 ```python
 >>> from distrolayer import DistroAbstractionLayer
