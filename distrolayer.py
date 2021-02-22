@@ -65,7 +65,7 @@ class DistroAbstractionLayer:
                 'interface': {
                     "install": "yum install $INSTALL$ -y",
                     "update": "yum update -y",
-                    "upgrade": None,
+                    "upgrade": "yum upgrade -y",
                 }
             }
         ]
