@@ -136,9 +136,12 @@ class DistroAbstractionLayer:
             output = output.rstrip()
         return output if output != '' else None
 
-    def __create_command__(self, command, param) -> Any:
+    def __create_command__(self, command, param, ignore_failure=False) -> Any:
         if command not in self.commands or not self.commands.get(command):
-            raise NotImplementedError(f'{command} is not implemented')
+            if not ignore_failure:
+                raise NotImplementedError(f'{command} is not implemented')
+            else:
+                return
         _c = self.commands[command]
         if param:
             _c = _c.replace(f'${command.upper()}$', param)
@@ -153,15 +156,19 @@ class DistroAbstractionLayer:
             Hides output from stdout
         - create (Boolean)
             If passed, does not run the command, just returns the output from __create_command__
+        - ignore_failure (Boolean)
+            If passed, this will ignore failures (such as the command not being found)
         '''
         command = kwargs['command']
         if not command:
             print('No command found')
             return
         param = kwargs.get('param', ' '.join([arg for arg in args]))
-        command = self.__create_command__(command, param)
+        ignore_failure = kwargs.get('ignore_failure', False)
+        command = self.__create_command__(command, param, ignore_failure)
         if not command:
-            print('No command found')
+            if not ignore_failure:
+                print('No command found')
             return
         if kwargs.get('create'):
             return command
