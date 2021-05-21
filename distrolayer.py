@@ -18,6 +18,8 @@ class DistroAbstractionLayer:
         "stop_service": "systemctl stop $STOP_SERVICE$",
         "start_service": "systemctl start $START_SERVICE$",
     }
+    __reserved_command_keywords = ['command', 'hide', 'ignore_failure', 'create']
+
 
     def __init__(self, remote_connection='', custom_command_map=dict()):
         """
