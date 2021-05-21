@@ -10,6 +10,7 @@ class DistroAbstractionLayer:
         "install": None,
         "upgrade": None,
         "update": None,
+        "remove": None,
         "set_hostname": "hostnamectl set-hostname $SET_HOSTNAME$",
         "reboot": "reboot",
         "enable_service": "systemctl enable $ENABLE_SERVICE$",
@@ -58,6 +59,7 @@ class DistroAbstractionLayer:
                 'interface': {
                     "install": "pacman -Sy $INSTALL$ --noconfirm",
                     "update": "pacman -Syy",
+                    "upgrade": "pacman -Syu"
                 }
             },
             {
