@@ -9,7 +9,7 @@ Current TODO
 - [x] [~~Implement major package manager interaces (APT, YUM, PACMAN)~~](#package-manager-interface)
 - [x] [~~Implement systemctl interface~~](#systemctl-interface)
 - [x] [~~Add custom commands feature~~](#custom-commands)
-- [ ] Add prebuilt package removal
+- [X] [~~Add prebuilt package removal~~](#package-removal)
 - [ ] Add ability to "sudo up" for commands that require higher level permission
 - [ ] Add other language package managers (pip, npm, etc)
 - [ ] Add /etc/init.d interface?
@@ -91,7 +91,39 @@ Note: The parameter `ignore_failure` can be provided which will **NOT** raise an
 
 ### Package Removal
 
-PENDING
+If the your package manager allows it, you can remove a package via the below method
+```python
+>>> from distrolayer import DistroAbstractionLayer
+>>> dal = DistroAbstractionLayer()
+>>> dal.remove('chromium-browser')
+apt-get remove -y chromium-browser
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+The following packages will be REMOVED:
+  chromium-browser*
+0 upgraded, 0 newly installed, 1 to remove and 59 not upgraded.
+After this operation, 164 kB disk space will be freed.
+(Reading database ... 325379 files and directories currently installed.)
+Removing chromium-browser (1:85.0.4183.83-0ubuntu0.20.04.2) ...
+Processing triggers for mime-support (3.64ubuntu1) ...
+Processing triggers for hicolor-icon-theme (0.17-2) ...
+Processing triggers for gnome-menus (3.36.0-1ubuntu1) ...
+Processing triggers for desktop-file-utils (0.24-1ubuntu3) ...
+(Reading database ... 325365 files and directories currently installed.)
+Purging configuration files for chromium-browser (1:85.0.4183.83-0ubuntu0.20.04.2) ...
+```
+
+NOTE: Some package managers allow additional flags to be passed to the "remove" command. For example, `apt` allows the flag `--purge` to be passed to clear out the packages configurations while removing the package itself.
+Flags can be passed in either of the below ways
+```python
+>>> dal.remove('chromium-browser --purge')
+```
+OR
+```python
+>>> dal.remove('chromium-browser', purge='')
+```
+Both methods will interpret the "flag" and provide it as such to the lower level package manager.
 
 ### Systemctl Interface
 
@@ -136,7 +168,7 @@ In the event that you need the Distro Abstraction Layer to do something that is 
 
 - Providing the command on initialization of the dal object
 ```python
->>> dal = DistroAbstractionLayer(custom_command_map=dict(get_system_status='systemctl status $GET_SYSTEM_STATUS$'))
+>>> dal = DistroAbstractionLayer(custom_command_map=dict(get_system_status='systemctl status $ARGS$ $KWARGS$'))
 >>> dal.get_system_status('nginx')
 systemctl status nginx
 ● nginx.service - A high performance web server and a reverse proxy server
@@ -157,13 +189,17 @@ systemctl status nginx
 >>>
 ```
 
-Notice that in order for this to work, the parameter **MUST** be defined in the following manner. `$METHOD_NAME_IN_UPPERCASE$`
+Notice that there are 2 variables wrapped in `$`.
+- `$ARGS$`
+  These are the "non flagged" arguments. In the above example, this would be `nginx`
+- `$KWARGS`
+  These would be "flagged" arguments. The above example does not have any, however these are going to be the arguments on commands that are prepended with a `--`. An example would be Debian's `apt` package manager, which has various `--` flags. Such as `apt-get remove YOUR_PACKAGE --purge`. For more details on flagged/nonflagged arguments, see [package removal](#package-removal)
 Provided this is done correctly, you can dynamically add new functionality to your dal instance.
 
 If you need to add the functionality _after_ you have created your dal instance, you can use the `add_command` method
 
 ```python
->>> dal.add_command('get_system_status', 'systemctl status $GET_SYSTEM_STATUS$')
+>>> dal.add_command('get_system_status', 'systemctl status $ARGS$ $KWARGS$')
 >>> dal.get_system_status('nginx')
 systemctl status nginx
 ● nginx.service - A high performance web server and a reverse proxy server
