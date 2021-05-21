@@ -28,7 +28,7 @@ class DistroAbstractionLayer:
             command to run. if the command takes an input, it the input param needs to be formatted with the command name (upper case only), surrounded by $$. For example,
             If your command was "install", your dictionary should look as follows.
 
-            dict(install="some command $INSTALL$).
+            dict(install="some command $ARGS$ $KWARGS$).
 
         """
         # TODO(Mike): Broken
@@ -51,25 +51,28 @@ class DistroAbstractionLayer:
             {
                 'package_manager_location': '/usr/bin/apt',
                 'interface': {
-                    'install': 'apt-get install -y $INSTALL$',
+                    'install': 'apt-get install -y $ARGS$ $KWARGS$',
                     'upgrade': 'apt-get upgrade -y',
                     'update': 'apt-get update -y',
+                    'remove': 'apt-get remove -y $ARGS$ $KWARGS$'
                 }
             },
             {
                 'package_manager_location':'/usr/bin/pacman',
                 'interface': {
-                    "install": "pacman -Sy $INSTALL$ --noconfirm",
+                    "install": "pacman -Sy --noconfirm $ARGS$ $KWARGS$",
                     "update": "pacman -Syy",
-                    "upgrade": "pacman -Syu"
+                    "upgrade": "pacman -Syu",
+                    "remove": "pacman -R $ARGS$"
                 }
             },
             {
                 'package_manager_location':'/usr/bin/yum',
                 'interface': {
-                    "install": "yum install $INSTALL$ -y",
+                    "install": "yum install -y $ARGS$ $KWARGS$",
                     "update": "yum update -y",
                     "upgrade": "yum upgrade -y",
+                    "remove": "yum remove -y $ARGS$"
                 }
             }
         ]
@@ -138,22 +141,19 @@ class DistroAbstractionLayer:
             output = output.rstrip()
         return output if output != '' else None
 
-    def __create_command__(self, command, param, ignore_failure=False) -> Any:
+    def __create_command__(self, command, args: str = '', kwargs: str = '', ignore_failure=False) -> Any:
         if command not in self.commands or not self.commands.get(command):
             if not ignore_failure:
                 raise NotImplementedError(f'{command} is not implemented')
             else:
                 return
-        _c = self.commands[command]
-        if param:
-            _c = _c.replace(f'${command.upper()}$', param)
+        _c = self.commands[command].replace('$ARGS$', args).replace('$KWARGS$', kwargs)
         return _c
 
     def __run_command__(self, *args, **kwargs) -> Any:
+        # TODO(Mike): Consider a slightly better way (read less fugly) of doing this
         '''
         Valid kwargs
-        - param (String)
-            Parameter(s) to pass to __create_command__. This should be a string
         - hide (Boolean)
             Hides output from stdout
         - create (Boolean)
@@ -161,17 +161,17 @@ class DistroAbstractionLayer:
         - ignore_failure (Boolean)
             If passed, this will ignore failures (such as the command not being found)
         '''
-        command = kwargs['command']
-        if not command:
-            print('No command found')
-            return
-        param = kwargs.get('param', ' '.join([arg for arg in args]))
         ignore_failure = kwargs.get('ignore_failure', False)
-        command = self.__create_command__(command, param, ignore_failure)
+        command = kwargs.get('command')
         if not command:
+            # TODO(Mike): logging?
             if not ignore_failure:
-                print('No command found')
+                print("NO COMMAND SUPPLIED!")
             return
+        _args = " ".join([arg for arg in args])
+        _kwargs = " ".join([f'--{kword}{"=" if arg else ""}' for kword, arg in kwargs.items() if kword not in DistroAbstractionLayer.__reserved_command_keywords])
+        ignore_failure = kwargs.get('ignore_failure', False)
+        command = self.__create_command__(command, _args, _kwargs, ignore_failure)
         if kwargs.get('create'):
             return command
         hide = kwargs.get('hide', False)
