@@ -30,8 +30,8 @@ class DistroAbstractionLayer:
 
             dict(install="some command $INSTALL$).
 
-            Currently, we only allow for single param custom commands. If you need more, you will have to build it yourself.
         """
+        # TODO(Mike): Broken
         self._connection = remote_connection
         self.distro = self.__get_distro__()
         self.commands = self.__init_command_map__(custom_command_map)
